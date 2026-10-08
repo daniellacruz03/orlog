@@ -1,0 +1,148 @@
+---
+// Nav.astro - Floating navigation bar
+---
+<header class="nav-wrapper">
+  <nav class="nav-inner container">
+    <a href="/" class="nav-logo" aria-label="Orlog">
+      <svg width="28" height="28" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <mask id="orlog-cut-nav">
+          <rect width="28" height="28" fill="white" />
+          <rect x="8.5" y="0" width="5" height="17" transform="rotate(45 11 17)" fill="black" />
+        </mask>
+        <circle cx="11" cy="17" r="7.5" stroke="#DFFF00" stroke-width="5" mask="url(#orlog-cut-nav)" />
+        <rect x="19.25" y="5.25" width="3.5" height="3.5" transform="rotate(45 21 7)" fill="#DFFF00" />
+      </svg>
+      <span class="nav-logo-text">Orlog</span>
+    </a>
+
+    <ul class="nav-links" role="list">
+      <li><a href="#capabilities" class="nav-link">Servicios</a></li>
+      <li><a href="#work" class="nav-link">Proyectos</a></li>
+      <li><a href="#philosophy" class="nav-link">Agencia</a></li>
+    </ul>
+
+    <a href="#contact" class="btn btn-primary nav-cta">
+      Hablemos
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+    </a>
+
+    <button class="nav-mobile-btn" id="navToggle" aria-label="Toggle menu" aria-expanded="false">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+        <line x1="3" y1="6" x2="21" y2="6"/>
+        <line x1="3" y1="12" x2="21" y2="12"/>
+        <line x1="3" y1="18" x2="21" y2="18"/>
+      </svg>
+    </button>
+  </nav>
+
+  <div class="nav-mobile-menu" id="mobileMenu" aria-hidden="true">
+    <a href="#capabilities" class="nav-mobile-link">Servicios</a>
+    <a href="#work" class="nav-mobile-link">Proyectos</a>
+    <a href="#philosophy" class="nav-mobile-link">Agencia</a>
+    <a href="#contact" class="nav-mobile-link nav-mobile-cta" style="color: var(--c-bg); background: var(--c-gold); font-weight: 600; text-align: center;">Hablemos →</a>
+  </div>
+</header>
+
+<style>
+.nav-wrapper {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
+  padding-block: 0.875rem;
+  border-bottom: 1px solid transparent;
+  transition: background 300ms, border-color 300ms, backdrop-filter 300ms;
+}
+.nav-wrapper.scrolled {
+  background: rgba(10, 9, 8, 0.85);
+  border-color: var(--c-border);
+  backdrop-filter: blur(16px);
+}
+.nav-inner {
+  display: flex;
+  align-items: center;
+  gap: 2rem;
+}
+.nav-logo {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  flex-shrink: 0;
+}
+.nav-logo-text {
+  font-family: var(--font-head);
+  font-weight: 700;
+  font-size: 1.125rem;
+  letter-spacing: -0.02em;
+  color: var(--c-text);
+}
+.nav-links {
+  display: flex;
+  align-items: center;
+  gap: 2rem;
+  list-style: none;
+  margin-left: auto;
+}
+.nav-link {
+  font-size: 0.875rem;
+  font-weight: 400;
+  color: var(--c-text-2);
+  transition: color 200ms;
+}
+.nav-link:hover { color: var(--c-text); }
+.nav-cta { padding: 0.5rem 1rem; margin-left: 1rem; }
+.nav-mobile-btn {
+  display: none;
+  margin-left: auto;
+  color: var(--c-text);
+  padding: 0.25rem;
+}
+.nav-mobile-menu {
+  display: none;
+  flex-direction: column;
+  gap: 0;
+  padding: 1rem 0;
+  border-top: 1px solid var(--c-border);
+  background: var(--c-bg);
+}
+.nav-mobile-menu.open { display: flex; }
+.nav-mobile-link {
+  padding: 0.875rem clamp(1.25rem, 4vw, 3rem);
+  font-size: 1rem;
+  color: var(--c-text-2);
+  border-bottom: 1px solid var(--c-border);
+  transition: color 200ms, background 200ms;
+}
+.nav-mobile-link:hover { color: var(--c-text); background: var(--c-bg-3); }
+.nav-mobile-cta { color: var(--c-gold); border-bottom: none; }
+
+@media (max-width: 768px) {
+  .nav-links, .nav-cta { display: none; }
+  .nav-mobile-btn { display: flex; }
+}
+</style>
+
+<script>
+const header = document.querySelector('.nav-wrapper') as HTMLElement;
+const btn = document.getElementById('navToggle') as HTMLButtonElement;
+const menu = document.getElementById('mobileMenu') as HTMLElement;
+
+window.addEventListener('scroll', () => {
+  header.classList.toggle('scrolled', window.scrollY > 20);
+}, { passive: true });
+
+btn?.addEventListener('click', () => {
+  const isOpen = menu.classList.toggle('open');
+  btn.setAttribute('aria-expanded', String(isOpen));
+  menu.setAttribute('aria-hidden', String(!isOpen));
+});
+
+menu?.querySelectorAll('a').forEach(link => {
+  link.addEventListener('click', () => {
+    menu.classList.remove('open');
+    btn.setAttribute('aria-expanded', 'false');
+    menu.setAttribute('aria-hidden', 'true');
+  });
+});
+</script>

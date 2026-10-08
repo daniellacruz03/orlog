@@ -1,0 +1,169 @@
+---
+// Capabilities.astro - Services/Capabilities section
+interface Capability {
+  id: string;
+  num: string;
+  title: string;
+  description: string;
+  items: string[];
+  accent: boolean;
+}
+
+const capabilities: Capability[] = [
+  {
+    id: 'cap-web',
+    num: '01',
+    title: 'Web & Digital Product',
+    description: 'We build production-grade web products—from zero to scaled. Performance, architecture, and UX are non-negotiable on every engagement.',
+    items: [
+      'High-performance web applications',
+      'SaaS product development',
+      'Headless storefronts & CMS',
+      'API design & integration',
+      'Core Web Vitals optimization',
+    ],
+    accent: false,
+  },
+  {
+    id: 'cap-auto',
+    num: '02',
+    title: 'Automations & Data Flows',
+    description: 'We eliminate the manual work that eats your team\'s time. Repeatable, observable, and fault-tolerant pipelines that run without babysitting.',
+    items: [
+      'Business process automation',
+      'Data pipelines & ETL',
+      'Scheduled reporting systems',
+      'CRM & ERP integrations',
+      'Webhook & event-driven flows',
+    ],
+    accent: true,
+  },
+  {
+    id: 'cap-arch',
+    num: '03',
+    title: 'Software Architecture',
+    description: 'For teams that have outgrown their current stack. We audit, redesign, and migrate systems without disrupting operations.',
+    items: [
+      'Architecture reviews & audits',
+      'Database schema design',
+      'Microservices & monorepos',
+      'Cloud infrastructure setup',
+      'Technical debt reduction plans',
+    ],
+    accent: false,
+  },
+];
+---
+
+<section class="section caps-section" id="capabilities">
+  <div class="container">
+    <header class="section-header reveal">
+      <div class="section-label-row">
+        <span class="gold-line"></span>
+        <span class="t-label">Servicios</span>
+      </div>
+      <h2 class="t-h1 section-title">
+        Three ways we<br />
+        intervene.
+      </h2>
+    </header>
+
+    <div class="caps-grid">
+      {capabilities.map((cap, i) => (
+        <div class={`cap-card reveal reveal-delay-${i + 1} ${cap.accent ? 'cap-card--accent' : ''}`} id={cap.id}>
+          <div class="cap-num t-label">{cap.num}</div>
+          <h3 class="t-h2 cap-title">{cap.title}</h3>
+          <p class="t-body cap-desc">{cap.description}</p>
+          <ul class="cap-list" role="list">
+            {cap.items.map(item => (
+              <li class="cap-list-item">
+                <svg class="cap-check" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
+                  <polyline points="20 6 9 17 4 12"/>
+                </svg>
+                <span>{item}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      ))}
+    </div>
+  </div>
+</section>
+
+<style>
+.caps-section { background: var(--c-bg-2); }
+
+.section-header { max-width: 540px; margin-bottom: 4rem; }
+.section-label-row { display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1.25rem; }
+.section-title { margin-bottom: 0; }
+
+.caps-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1px;
+  background: var(--c-border);
+  border: 1px solid var(--c-border);
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.cap-card {
+  background: var(--c-bg-2);
+  padding: 3rem 2.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  transition: background 250ms;
+  position: relative;
+}
+.cap-card:hover { background: var(--c-bg-3); }
+.cap-card--accent {
+  background: var(--c-surface);
+}
+.cap-card--accent::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: var(--c-gold);
+}
+.cap-card--accent:hover { background: #1e1d1b; }
+
+.cap-num { color: var(--c-gold); margin-bottom: 0.5rem; }
+.cap-title { color: var(--c-text); }
+.cap-desc { color: var(--c-text-2); font-size: 0.9375rem; line-height: 1.65; }
+
+.cap-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+  margin-top: 0.5rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid var(--c-border);
+}
+.cap-list-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.625rem;
+  font-size: 0.875rem;
+  color: var(--c-text-2);
+  line-height: 1.4;
+}
+.cap-check {
+  flex-shrink: 0;
+  margin-top: 0.125rem;
+  color: var(--c-gold);
+}
+
+@media (max-width: 1024px) {
+  .caps-grid { grid-template-columns: 1fr; }
+  .cap-card { padding: 2.5rem 2rem; }
+  .cap-card--accent::before { width: 2px; height: 100%; right: auto; bottom: 0; top: 0; }
+}
+@media (max-width: 600px) {
+  .cap-card { padding: 2rem 1.5rem; }
+}
+</style>

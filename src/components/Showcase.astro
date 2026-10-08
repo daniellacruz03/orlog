@@ -1,0 +1,1033 @@
+---
+// Showcase.astro
+// Unified Hero + Featured Work — a single immersive viewport (MetaLab architecture).
+//
+//  IDLE   → 3D background · pills · editorial headline · manifesto
+//  ACTIVE → project background crossfade · floating mockup · project name · key metric
+//
+// State lives in the client script: `activeProject: Project | null`.
+// Projects with `brand` get a full takeover (backdrop + device scene + sticker)
+// instead of the generic browser mockup.
+import { projects, type Project } from '../data/projects';
+
+const pad = (n: number) => String(n).padStart(2, '0');
+const total = pad(projects.length);
+const ext = (p: Project) => (p.external ? { target: '_blank', rel: 'noopener' } : {});
+const browserProjects = projects.filter((p) => !p.brand);
+const brandProjects = projects.filter((p) => p.brand);
+
+// Deterministic ember particles for brand backdrops (no Math.random → stable SSR)
+const embers = Array.from({ length: 14 }, (_, i) => ({
+  x: (i * 37 + 11) % 100,
+  size: 2 + ((i * 7) % 4),
+  dur: 7 + ((i * 5) % 6),
+  delay: -((i * 13) % 11),
+  drift: ((i % 2 ? 1 : -1) * (10 + ((i * 9) % 30))),
+}));
+---
+
+<section class="hs" id="work" data-showcase data-state="idle" data-media="browser" aria-label="Orlog — selected work">
+
+  <!-- ═══ BACKGROUND STACK ═══════════════════════════════════════ -->
+  <div class="hs-bg" aria-hidden="true">
+    <div class="hs-bg-layer hs-bg-default">
+      <svg class="hs-bg-hero-graphic" viewBox="0 0 200 200" aria-hidden="true">
+        <mask id="hero-cut-graphic">
+          <rect width="200" height="200" fill="white" />
+          <rect x="75" y="-20" width="35" height="140" transform="rotate(45 100 100)" fill="black" />
+        </mask>
+        <circle cx="100" cy="100" r="75" stroke="var(--c-bg-3)" stroke-width="25" mask="url(#hero-cut-graphic)" />
+        <rect x="156" y="24" width="22" height="22" transform="rotate(45 167 35)" fill="var(--c-bg-3)" />
+      </svg>
+    </div>
+
+    {projects.map((p) => p.brand ? (
+      <div class="hs-bg-layer hs-bg-brand" data-project={p.id} style={`--accent:${p.accent}; --backdrop:${p.brand.backdrop}`}>
+        <span class="hs-heat"></span>
+        {embers.map((e) => (
+          <span class="hs-ember" style={`--x:${e.x}%; --s:${e.size}px; --dur:${e.dur}s; --delay:${e.delay}s; --drift:${e.drift}px`}></span>
+        ))}
+      </div>
+    ) : (
+      <div class="hs-bg-layer hs-bg-project" data-project={p.id} style={`--accent:${p.accent}`}>
+        <img class="hs-bg-img hs-bg-img--blur" src={p.image} alt="" decoding="async" fetchpriority="low" />
+      </div>
+    ))}
+
+    <div class="hs-scrim"></div>
+    <div class="hs-grain"></div>
+  </div>
+
+  <!-- ═══ LEFT · PROJECT PILLS (desktop) ══════════════════════════ -->
+  <nav class="hs-pills" aria-label="Selected work" data-zone>
+    <ul role="list">
+      {projects.map((p, i) => (
+        <li>
+          <a
+            class="hs-pill hs-enter"
+            href={p.href}
+            id={`hs-pill-${p.id}`}
+            data-project={p.id}
+            data-pill
+            style={`--accent:${p.accent}; --d:${180 + i * 70}ms`}
+            {...ext(p)}
+          >
+            {p.brand
+              ? <img class="hs-pill-logo" src={p.brand.logo} alt="" decoding="async" />
+              : <span class="hs-pill-dot" aria-hidden="true"></span>}
+            {p.name}
+          </a>
+        </li>
+      ))}
+      <li>
+        <a class="hs-pill hs-pill--all hs-enter" href="/work" id="hs-pill-all" style={`--d:${180 + projects.length * 70}ms`}>
+          All Work
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9" /></svg>
+        </a>
+      </li>
+    </ul>
+  </nav>
+
+  <!-- ═══ CENTER-RIGHT · FLOATING MOCKUP (hidden while idle) ══════ -->
+  <a class="hs-mockup" href={browserProjects[0]?.href ?? '#'} data-zone data-mockup tabindex="-1" aria-hidden="true">
+    <div class="hs-mockup-card">
+      <div class="hs-mockup-chrome">
+        <span class="hs-dots"><i></i><i></i><i></i></span>
+        <span class="hs-url">
+          {browserProjects.map((p) => <span class="hs-swap" data-project={p.id}>{p.url}</span>)}
+        </span>
+      </div>
+      <div class="hs-mockup-screen">
+        {browserProjects.map((p) => (
+          <img class="hs-mockup-img" data-project={p.id} src={p.image} alt="" decoding="async" fetchpriority="low" />
+        ))}
+      </div>
+    </div>
+  </a>
+
+  <!-- ═══ CENTER · BRAND TAKEOVER SCENES (device composite + sticker) ═ -->
+  {brandProjects.map((p) => (
+    <a class="hs-scene" href={p.href} data-project={p.id} data-zone tabindex="-1" aria-hidden="true" style={`--accent:${p.accent}`} {...ext(p)}>
+      <span class="hs-scene-media">
+        <img
+          src={p.brand!.scene.src}
+          width={p.brand!.scene.width}
+          height={p.brand!.scene.height}
+          alt=""
+          decoding="async"
+          fetchpriority="low"
+        />
+      </span>
+      <span class={`hs-sticker${p.brand!.ring ? '' : ' hs-sticker--wordmark'}`}>
+        {p.brand!.ring && (
+          <svg class="hs-sticker-ring" viewBox="0 0 200 200" aria-hidden="true">
+            <defs>
+              <path id={`hs-ring-${p.id}`} d="M100,100 m-84,0 a84,84 0 1,1 168,0 a84,84 0 1,1 -168,0" />
+            </defs>
+            <text><textPath href={`#hs-ring-${p.id}`} textLength="520" lengthAdjust="spacing">{p.brand!.ring}</textPath></text>
+          </svg>
+        )}
+        <img class="hs-sticker-logo" src={p.brand!.logo} alt="" decoding="async" />
+      </span>
+    </a>
+  ))}
+
+  <!-- ═══ RIGHT · MANIFESTO ⇄ METRIC ══════════════════════════════ -->
+  <div class="hs-aside" data-zone>
+    <div class="hs-aside-panel hs-aside-default hs-enter" style="--d:420ms">
+      <p class="t-label hs-kicker"><span class="gold-line"></span>Desarrollo web · Sistemas</p>
+      <p class="hs-manifesto">
+        Desarrollo web y sistemas para tu negocio.
+      </p>
+      <a class="hs-link" href="#contact" id="hs-cta">
+        Cuéntanos tu proyecto
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7" /></svg>
+      </a>
+    </div>
+
+    {projects.map((p) => (
+      <div class="hs-aside-panel hs-aside-case" data-project={p.id} aria-hidden="true">
+        <p class="t-label hs-kicker">{p.sector} · {p.year}</p>
+        <p class="hs-metric">
+          <span class="hs-metric-value">{p.metric.value}</span>
+          <span class="hs-metric-label">{p.metric.label}</span>
+        </p>
+        <p class="hs-summary">{p.summary}</p>
+        <ul class="hs-stack" role="list">
+          {p.stack.map((s) => <li class="tag">{s}</li>)}
+        </ul>
+        {p.external && (
+          <a class="hs-link hs-link--live" href={p.href} target="_blank" rel="noopener" tabindex="-1">
+            Visit live site
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9" /></svg>
+          </a>
+        )}
+      </div>
+    ))}
+  </div>
+
+  <!-- ═══ BOTTOM · EDITORIAL HEADLINE ⇄ PROJECT NAME ══════════════ -->
+  <div class="hs-headline">
+    <div class="hs-eyebrow t-label">
+      <span class="hs-swap hs-swap--idle hs-enter" style="--d:80ms">Orlog — Desarrollo web y sistemas</span>
+      {projects.map((p, i) => (
+        <span class="hs-swap" data-project={p.id}>Case {pad(i + 1)} / {total} — {p.sector}</span>
+      ))}
+    </div>
+
+    <div class="hs-titles">
+      <h1 class="hs-title hs-title--idle hs-enter" style="--d:140ms">Tu siguiente<br />gran idea empieza<br />a funcionar aquí.</h1>
+      {projects.map((p) => (
+        <p class="hs-title hs-title--project" data-project={p.id} aria-hidden="true">{p.name}</p>
+      ))}
+    </div>
+  </div>
+
+  <!-- ═══ BOTTOM-RIGHT · MICRO INDICATOR ══════════════════════════ -->
+  <div class="hs-indicator t-label" aria-hidden="true">
+    <span class="hs-swap hs-swap--idle"><span class="hs-scroll-line"></span>Scroll</span>
+    {projects.map((p) => (
+      <span class="hs-swap" data-project={p.id}>{p.external ? 'Visit site ↗' : 'View case →'}</span>
+    ))}
+  </div>
+
+  <!-- ═══ MOBILE · COMPACT CAROUSEL (< 768px) ═════════════════════ -->
+  <div class="hs-mobile">
+    <ul class="hs-carousel" role="list" aria-label="Selected work">
+      {projects.map((p) => (
+        <li>
+          <a class="hs-card" href={p.href} id={`hs-card-${p.id}`} style={`--accent:${p.accent}`} {...ext(p)}>
+            <span class="hs-card-media">
+              <img
+                src={p.thumb?.src ?? p.image}
+                style={p.thumb?.position ? `object-position:${p.thumb.position}` : undefined}
+                alt={`${p.name} interface`}
+                loading="lazy"
+                decoding="async"
+              />
+              {p.brand && <img class="hs-card-logo" src={p.brand.logo} alt="" loading="lazy" />}
+            </span>
+            <span class="hs-card-body">
+              <span class="t-label">{p.sector}</span>
+              <span class="hs-card-name">{p.name}</span>
+              <span class="hs-card-metric"><b>{p.metric.value}</b> {p.metric.label}</span>
+            </span>
+          </a>
+        </li>
+      ))}
+    </ul>
+    <a class="hs-pill hs-pill--all" href="/work" id="hs-all-mobile">
+      All Work
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9" /></svg>
+    </a>
+  </div>
+</section>
+
+<!-- ─────────────────────────────────────────────────────────────── -->
+<style>
+/* ── Shell ─────────────────────────────────────────────────────── */
+.hs {
+  --gutter: clamp(1.25rem, 3.2vw, 3rem);
+  --aside-w: clamp(15rem, 22vw, 22rem);
+  --accent: var(--c-gold);
+  --mx: 0;
+  --my: 0;
+  --ease: cubic-bezier(0.16, 1, 0.3, 1);
+  --fade: 650ms;
+
+  position: relative;
+  height: 100svh;
+  min-height: 640px;
+  overflow: hidden;
+  isolation: isolate;
+}
+
+/* ── Background stack ─────────────────────────────────────────── */
+.hs-bg { position: absolute; inset: 0; z-index: -1; background: var(--c-bg); }
+
+.hs-bg-layer {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  transition: opacity var(--fade) var(--ease);
+}
+
+.hs-bg-img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  max-width: none;
+  object-fit: cover;
+}
+
+/* default 3D visual: always present underneath, slow drift + parallax */
+.hs-bg-default { opacity: 1; }
+.hs-bg-hero-graphic {
+  position: absolute;
+  top: -15vh;
+  right: -5vw;
+  width: 95vh;
+  height: 95vh;
+  max-width: 1000px;
+  transform: translate3d(calc(var(--mx) * -14px), calc(var(--my) * -10px), 0) rotate(15deg);
+  transition: transform 1.2s var(--ease);
+  animation: hsDrift 26s ease-in-out infinite alternate;
+}
+@keyframes hsDrift {
+  from { scale: 1; }
+  to   { scale: 1.06; }
+}
+
+/* project layers: blurred screenshot + accent wash */
+.hs-bg-project { background: var(--c-bg); }
+.hs-bg-project::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse 60% 55% at 62% 38%, color-mix(in srgb, var(--accent) 34%, transparent), transparent 70%),
+    radial-gradient(ellipse 45% 50% at 8% 95%, color-mix(in srgb, var(--accent) 16%, transparent), transparent 70%);
+  mix-blend-mode: screen;
+}
+.hs-bg-img--blur {
+  filter: blur(56px) saturate(1.35) brightness(0.42);
+  transform: scale(1.3);
+}
+.hs-bg-project[data-on] { opacity: 1; }
+
+/* brand takeover layers: custom backdrop + breathing heat glow + embers */
+.hs-bg-brand { background: var(--backdrop); overflow: hidden; }
+.hs-bg-brand[data-on] { opacity: 1; }
+.hs-heat {
+  position: absolute;
+  left: 52%;
+  top: 36%;
+  width: 72vw;
+  aspect-ratio: 1.7;
+  translate: -50% -50%;
+  background: radial-gradient(closest-side, color-mix(in srgb, var(--accent) 40%, transparent), transparent);
+  filter: blur(30px);
+  mix-blend-mode: screen;
+  animation: hsHeat 5s ease-in-out infinite alternate paused;
+}
+.hs-ember {
+  position: absolute;
+  bottom: -12px;
+  left: var(--x);
+  width: var(--s);
+  height: var(--s);
+  border-radius: 50%;
+  background: #FFB37A;
+  box-shadow: 0 0 10px 2px rgba(247, 68, 49, 0.75);
+  opacity: 0;
+  animation: hsEmber var(--dur) linear var(--delay) infinite paused;
+}
+/* only burn CPU while the layer is visible */
+.hs-bg-brand[data-on] .hs-heat,
+.hs-bg-brand[data-on] .hs-ember { animation-play-state: running; }
+@keyframes hsHeat {
+  from { opacity: 0.55; scale: 0.94; }
+  to   { opacity: 1;    scale: 1.06; }
+}
+@keyframes hsEmber {
+  0%   { transform: translate3d(0, 0, 0); opacity: 0; }
+  12%  { opacity: 0.9; }
+  70%  { opacity: 0.5; }
+  100% { transform: translate3d(var(--drift), -88vh, 0); opacity: 0; }
+}
+
+/* legibility scrim + grain */
+.hs-scrim {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(to top, rgba(10,9,8,0.95) 0%, rgba(10,9,8,0.55) 28%, transparent 60%),
+    linear-gradient(to right, rgba(10,9,8,0.75) 0%, transparent 38%),
+    linear-gradient(to bottom, rgba(10,9,8,0.6) 0%, transparent 18%);
+}
+.hs-grain {
+  position: absolute;
+  inset: -50%;
+  opacity: 0.07;
+  mix-blend-mode: overlay;
+  pointer-events: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* ── Generic swap helper (stacked crossfade) ──────────────────── */
+.hs-swap {
+  grid-area: 1 / 1;
+  opacity: 0;
+  transform: translateY(0.6em);
+  transition: opacity 450ms var(--ease), transform 600ms var(--ease);
+  pointer-events: none;
+}
+.hs-swap[data-on],
+.hs[data-state="idle"] .hs-swap--idle {
+  opacity: 1;
+  transform: none;
+  pointer-events: auto;
+  transition-delay: 90ms;
+}
+
+/* ── Pills ────────────────────────────────────────────────────── */
+.hs-pills {
+  position: absolute;
+  z-index: 3;
+  left: var(--gutter);
+  top: calc(var(--nav-h) + clamp(1.5rem, 7vh, 5rem));
+}
+.hs-pills ul {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.5rem;
+}
+
+.hs-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.625rem;
+  padding: 0.55rem 1.05rem 0.55rem 0.85rem;
+  border-radius: 999px;
+  font-size: 0.9375rem;
+  font-weight: 500;
+  letter-spacing: -0.005em;
+  color: var(--c-text);
+  background: rgba(22, 21, 19, 0.55);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(14px) saturate(140%);
+  -webkit-backdrop-filter: blur(14px) saturate(140%);
+  transition:
+    background 300ms var(--ease),
+    color 300ms var(--ease),
+    border-color 300ms var(--ease),
+    opacity 300ms var(--ease),
+    transform 400ms var(--ease);
+}
+.hs-pill-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  border: 1.5px solid var(--accent);
+  transition: background 300ms, box-shadow 300ms;
+}
+/* real clients show their mark instead of the dot */
+.hs-pill-logo {
+  width: auto;
+  height: 18px;
+  max-width: 72px;
+  margin-left: -4px;
+  border-radius: 3px;
+  transition: transform 600ms cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.hs-pill[data-on] .hs-pill-logo { transform: rotate(-14deg) scale(1.15); }
+
+/* active pill: inverted, accent dot glows */
+.hs-pill[data-on] {
+  background: rgba(245, 240, 235, 0.96);
+  color: #0A0908;
+  border-color: transparent;
+  transform: translateX(6px);
+}
+.hs-pill[data-on] .hs-pill-dot {
+  background: var(--accent);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent) 25%, transparent);
+}
+/* siblings recede while one is active */
+.hs[data-state="active"] .hs-pill:not([data-on]) { opacity: 0.5; }
+.hs-pill:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+
+.hs-pill--all {
+  margin-top: 0.5rem;
+  background: transparent;
+  border-color: rgba(255, 255, 255, 0.14);
+  color: var(--c-text-2);
+  padding-left: 1.05rem;
+}
+.hs-pill--all:hover { color: var(--c-gold); border-color: var(--c-gold-dim); }
+.hs-pill--all svg { transition: transform 300ms var(--ease); }
+.hs-pill--all:hover svg { transform: translate(2px, -2px); }
+
+/* ── Floating mockup ──────────────────────────────────────────── */
+.hs-mockup {
+  position: absolute;
+  z-index: 2;
+  left: clamp(15rem, 27vw, 26rem);
+  top: calc(var(--nav-h) + clamp(0.75rem, 4vh, 3rem));
+  width: min(46vw, 860px, calc((100svh - 22rem) * 1.6));
+  perspective: 1400px;
+
+  opacity: 0;
+  visibility: hidden;
+  transform: translate3d(0, 48px, 0) scale(0.94);
+  transition:
+    opacity 550ms var(--ease),
+    transform 800ms var(--ease),
+    visibility 0s linear 800ms;
+}
+.hs[data-state="active"][data-media="browser"] .hs-mockup {
+  opacity: 1;
+  visibility: visible;
+  transform: none;
+  transition: opacity 550ms var(--ease), transform 800ms var(--ease), visibility 0s;
+}
+
+.hs-mockup-card {
+  padding: 8px;
+  border-radius: 22px;
+  background: rgba(255, 255, 255, 0.045);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(24px) saturate(150%);
+  -webkit-backdrop-filter: blur(24px) saturate(150%);
+  box-shadow:
+    0 60px 120px -30px rgba(0, 0, 0, 0.85),
+    0 30px 140px -50px color-mix(in srgb, var(--accent) 60%, transparent),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  transform: rotateY(calc(var(--mx) * 5deg)) rotateX(calc(var(--my) * -4deg));
+  transform-style: preserve-3d;
+  transition: transform 900ms var(--ease), box-shadow 700ms var(--ease);
+}
+
+.hs-mockup-chrome {
+  display: flex;
+  align-items: center;
+  gap: 0.875rem;
+  padding: 0.35rem 0.6rem 0.6rem;
+}
+.hs-dots { display: flex; gap: 6px; }
+.hs-dots i { width: 9px; height: 9px; border-radius: 50%; background: rgba(255, 255, 255, 0.14); }
+.hs-url {
+  display: grid;
+  flex: 1;
+  max-width: 260px;
+  margin-inline: auto;
+  padding: 0.2rem 0.75rem;
+  border-radius: 6px;
+  background: rgba(0, 0, 0, 0.35);
+  font-size: 0.6875rem;
+  color: var(--c-text-3);
+  text-align: center;
+  letter-spacing: 0.02em;
+}
+.hs-url .hs-swap { transform: none; }
+
+.hs-mockup-screen {
+  position: relative;
+  aspect-ratio: 16 / 10;
+  border-radius: 14px;
+  overflow: hidden;
+  background: var(--c-bg-2);
+}
+.hs-mockup-img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: top center;
+  opacity: 0;
+  transform: scale(1.04);
+  transition: opacity 500ms var(--ease), transform 900ms var(--ease);
+}
+.hs-mockup-img[data-on] { opacity: 1; transform: none; }
+
+/* ── Brand scene (device composite + sticker) ─────────────────── */
+.hs-scene {
+  --scene-left: clamp(14rem, 22vw, 24rem);
+  position: absolute;
+  z-index: 2;
+  left: var(--scene-left);
+  top: calc(var(--nav-h) + clamp(0.5rem, 4vh, 3rem));
+  width: min(
+    calc(100vw - var(--scene-left) - var(--aside-w) - var(--gutter) * 2.5),
+    calc((100svh - 19rem) * 2.16),
+    1180px
+  );
+  display: block;
+
+  opacity: 0;
+  visibility: hidden;
+  transform: translate3d(0, 56px, 0) scale(0.92);
+  transition:
+    opacity 550ms var(--ease),
+    transform 900ms var(--ease),
+    visibility 0s linear 900ms;
+}
+.hs-scene[data-on] {
+  opacity: 1;
+  visibility: visible;
+  transform: none;
+  transition:
+    opacity 600ms var(--ease) 60ms,
+    transform 1000ms var(--ease) 60ms,
+    visibility 0s;
+}
+.hs-scene-media {
+  display: block;
+  transform: translate3d(calc(var(--mx) * -12px), calc(var(--my) * -8px), 0);
+  transition: transform 1s var(--ease);
+}
+.hs-scene-media img {
+  width: 100%;
+  height: auto;
+  /* feather the photo's red wall into the CSS backdrop */
+  -webkit-mask-image:
+    linear-gradient(to right, transparent, #000 9%, #000 91%, transparent),
+    linear-gradient(to bottom, transparent, #000 13%, #000 80%, transparent);
+  -webkit-mask-composite: source-in;
+  mask-image:
+    linear-gradient(to right, transparent, #000 9%, #000 91%, transparent),
+    linear-gradient(to bottom, transparent, #000 13%, #000 80%, transparent);
+  mask-composite: intersect;
+  animation: hsFloat 6s ease-in-out infinite alternate paused;
+}
+.hs-scene[data-on] .hs-scene-media img { animation-play-state: running; }
+@keyframes hsFloat {
+  from { translate: 0 0; }
+  to   { translate: 0 -8px; }
+}
+
+/* logo sticker: stamps in, text orbits around it */
+.hs-sticker {
+  position: absolute;
+  left: 1%;
+  top: -6%;
+  width: clamp(92px, 9.5vw, 148px);
+  aspect-ratio: 1;
+  opacity: 0;
+  transform: scale(0.3) rotate(-60deg);
+  transition:
+    opacity 300ms var(--ease),
+    transform 900ms cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.hs-scene[data-on] .hs-sticker {
+  opacity: 1;
+  transform: rotate(-10deg);
+  transition-delay: 280ms;
+}
+/* wordmark logos stay perfectly upright — no spin on entrance or hover */
+.hs-sticker--wordmark { transform: scale(0.3); }
+.hs-scene[data-on] .hs-sticker--wordmark { transform: none; }
+.hs-sticker-ring {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  animation: hsSpin 24s linear infinite paused;
+}
+.hs-scene[data-on] .hs-sticker-ring { animation-play-state: running; }
+.hs-sticker-ring text {
+  font-family: var(--font-body);
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  fill: rgba(245, 240, 235, 0.92);
+}
+.hs-sticker-logo {
+  position: absolute;
+  inset: 15%;
+  width: 70%;
+  height: 70%;
+  filter: drop-shadow(0 14px 28px rgba(0, 0, 0, 0.55));
+  transition: transform 600ms cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.hs-scene:hover .hs-sticker-logo { transform: scale(1.08) rotate(8deg); }
+@keyframes hsSpin { to { rotate: 360deg; } }
+
+/* ── Right column (manifesto ⇄ metric) ────────────────────────── */
+.hs-aside {
+  position: absolute;
+  z-index: 3;
+  right: var(--gutter);
+  top: 50%;
+  translate: 0 -50%;
+  width: var(--aside-w);
+  display: grid;
+}
+.hs-aside-panel {
+  grid-area: 1 / 1;
+  align-self: start;
+  transition: opacity 450ms var(--ease), transform 600ms var(--ease), filter 600ms var(--ease);
+}
+.hs-aside-case {
+  opacity: 0;
+  transform: translateY(16px);
+  filter: blur(4px);
+  pointer-events: none;
+}
+.hs-aside-case[data-on] {
+  opacity: 1;
+  transform: none;
+  filter: none;
+  pointer-events: auto;
+  transition-delay: 120ms;
+}
+.hs[data-state="active"] .hs-aside-default {
+  opacity: 0;
+  transform: translateY(-12px);
+  filter: blur(4px);
+  pointer-events: none;
+}
+
+.hs-kicker {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1.25rem;
+  color: var(--c-text-2);
+}
+.hs-manifesto {
+  font-size: clamp(1rem, 1.25vw, 1.1875rem);
+  line-height: 1.55;
+  color: var(--c-text);
+  text-wrap: pretty;
+  margin-bottom: 1.75rem;
+}
+.hs-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding-bottom: 0.25rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--c-gold);
+  border-bottom: 1px solid var(--c-gold-dim);
+  transition: gap 300ms var(--ease), border-color 300ms;
+}
+.hs-link:hover { gap: 0.8rem; border-color: var(--c-gold); }
+.hs-link--live {
+  margin-top: 1.25rem;
+  color: var(--accent);
+  border-color: color-mix(in srgb, var(--accent) 40%, transparent);
+}
+.hs-link--live:hover { border-color: var(--accent); }
+
+.hs-metric { display: flex; flex-direction: column; gap: 0.35rem; margin-bottom: 1rem; }
+.hs-metric-value {
+  font-family: var(--font-head);
+  font-size: clamp(2.75rem, 4.4vw, 4.25rem);
+  font-weight: 900;
+  line-height: 0.9;
+  letter-spacing: -0.04em;
+  color: var(--c-text);
+}
+.hs-metric-label {
+  font-size: 0.9375rem;
+  font-weight: 500;
+  color: var(--accent);
+}
+.hs-summary {
+  font-size: 0.9375rem;
+  line-height: 1.55;
+  color: var(--c-text-2);
+  margin-bottom: 1.25rem;
+  text-wrap: pretty;
+}
+.hs-stack { list-style: none; display: flex; flex-wrap: wrap; gap: 0.375rem; }
+.hs-stack .tag { background: rgba(26, 25, 23, 0.6); backdrop-filter: blur(8px); }
+
+/* ── Bottom headline ──────────────────────────────────────────── */
+.hs-headline {
+  position: absolute;
+  z-index: 2;
+  left: var(--gutter);
+  bottom: clamp(1.5rem, 5vh, 3.5rem);
+  max-width: calc(100% - var(--aside-w) - var(--gutter) * 3);
+  pointer-events: none;
+}
+.hs-eyebrow {
+  display: grid;
+  margin-bottom: clamp(0.75rem, 2vh, 1.5rem);
+  color: var(--c-text-2);
+}
+.hs-titles { display: grid; align-items: end; }
+.hs-title {
+  grid-area: 1 / 1;
+  font-family: var(--font-head);
+  font-size: clamp(2.5rem, 6.5vw, 6.5rem);
+  font-weight: 900;
+  line-height: 1.05;
+  letter-spacing: -0.04em;
+  color: var(--c-text);
+  text-wrap: balance;
+  transition:
+    opacity 450ms var(--ease),
+    transform 750ms var(--ease),
+    filter 600ms var(--ease);
+}
+.hs-title--project {
+  opacity: 0;
+  transform: translateY(0.25em);
+  filter: blur(10px);
+}
+.hs-title--project[data-on] {
+  opacity: 1;
+  transform: none;
+  filter: none;
+  transition-delay: 80ms;
+}
+.hs[data-state="active"] .hs-title--idle {
+  opacity: 0;
+  transform: translateY(-0.18em);
+  filter: blur(10px);
+}
+
+/* ── Bottom-right indicator ───────────────────────────────────── */
+.hs-indicator {
+  position: absolute;
+  z-index: 2;
+  right: var(--gutter);
+  bottom: clamp(1.5rem, 5vh, 3.5rem);
+  display: grid;
+  justify-items: end;
+  color: var(--c-text-3);
+}
+.hs-indicator .hs-swap { display: inline-flex; align-items: center; gap: 0.75rem; }
+.hs-indicator .hs-swap[data-on] { color: var(--accent); }
+.hs-scroll-line {
+  width: 36px;
+  height: 1px;
+  background: linear-gradient(to right, transparent, var(--c-gold));
+  animation: hsLine 2.4s var(--ease) infinite;
+  transform-origin: left;
+}
+@keyframes hsLine {
+  0%   { transform: scaleX(0); opacity: 0; }
+  40%  { transform: scaleX(1); opacity: 1; }
+  100% { transform: scaleX(1); opacity: 0; }
+}
+
+/* ── Load entrance ────────────────────────────────────────────── */
+/* `backwards` (not `both`) so the state-driven opacity swaps aren't locked after load */
+.hs-enter { animation: hsIn 1s var(--ease) backwards; animation-delay: var(--d, 0ms); }
+@keyframes hsIn {
+  from { opacity: 0; translate: 0 24px; }
+  to   { opacity: 1; translate: 0 0; }
+}
+
+/* ── Mobile block hidden on desktop ───────────────────────────── */
+.hs-mobile { display: none; }
+
+/* ── Tablet tuning ────────────────────────────────────────────── */
+@media (max-width: 1100px) and (min-width: 768px) {
+  .hs { --aside-w: 14rem; }
+  .hs-pill { font-size: 0.875rem; }
+}
+
+/* ══ MOBILE (< 768px): flow layout + carousel, no hover ═════════ */
+@media (max-width: 767px) {
+  .hs {
+    height: auto;
+    min-height: 100svh;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    gap: 1.75rem;
+    padding: calc(var(--nav-h) + 3rem) 0 2rem;
+  }
+
+  .hs-pills,
+  .hs-mockup,
+  .hs-scene,
+  .hs-indicator,
+  .hs-aside-case,
+  .hs-title--project,
+  .hs-eyebrow [data-project] { display: none; }
+
+  .hs-headline,
+  .hs-aside {
+    position: static;
+    translate: none;
+    width: auto;
+    max-width: none;
+    padding-inline: var(--gutter);
+    pointer-events: auto;
+  }
+  .hs-headline { order: 1; }
+  .hs-aside    { order: 2; }
+  .hs-mobile   { order: 3; }
+
+  .hs-title { font-size: clamp(3rem, 15vw, 5rem); }
+  .hs-manifesto { margin-bottom: 1.25rem; }
+
+  .hs-bg-img--hero { object-position: 78% 20%; }
+  .hs-scrim {
+    background: linear-gradient(to top, rgba(10,9,8,0.98) 0%, rgba(10,9,8,0.7) 55%, rgba(10,9,8,0.25) 100%);
+  }
+
+  .hs-mobile {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+  }
+  .hs-mobile > .hs-pill--all { align-self: flex-start; margin: 0 var(--gutter); }
+
+  .hs-carousel {
+    list-style: none;
+    display: flex;
+    gap: 0.75rem;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scroll-snap-type: x mandatory;
+    scroll-padding-inline: var(--gutter);
+    padding-inline: var(--gutter);
+    scrollbar-width: none;
+  }
+  .hs-carousel::-webkit-scrollbar { display: none; }
+  .hs-carousel li { flex: 0 0 78%; scroll-snap-align: start; }
+
+  .hs-card {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    border-radius: 18px;
+    overflow: hidden;
+    background: rgba(22, 21, 19, 0.7);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+  }
+  .hs-card-media { position: relative; display: block; aspect-ratio: 16 / 10; overflow: hidden; }
+  .hs-card-media img { width: 100%; height: 100%; object-fit: cover; object-position: top; }
+  .hs-card-media .hs-card-logo {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    width: 40px;
+    height: 40px;
+    transform: rotate(-10deg);
+    filter: drop-shadow(0 6px 12px rgba(0, 0, 0, 0.5));
+  }
+  .hs-card-body { display: flex; flex-direction: column; gap: 0.3rem; padding: 0.9rem 1rem 1.1rem; }
+  .hs-card-name {
+    font-family: var(--font-head);
+    font-size: 1.375rem;
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    line-height: 1.1;
+  }
+  .hs-card-metric { font-size: 0.8125rem; color: var(--c-text-2); }
+  .hs-card-metric b { color: var(--accent); font-weight: 600; }
+}
+</style>
+
+<script>
+import { projects, type Project } from '../data/projects';
+
+/** Delay before returning to the idle manifesto after the cursor leaves. */
+const RESET_DELAY = 650;
+
+const root = document.querySelector<HTMLElement>('[data-showcase]');
+if (root) initShowcase(root);
+
+function initShowcase(root: HTMLElement) {
+  // ── State ──────────────────────────────────────────────────────
+  let activeProject: Project | null = null;
+  let resetTimer: number | undefined;
+
+  const byId = new Map(projects.map((p) => [p.id, p]));
+  const targets = root.querySelectorAll<HTMLElement>('[data-project]');
+  const pills = root.querySelectorAll<HTMLAnchorElement>('[data-pill]');
+  const zones = root.querySelectorAll<HTMLElement>('[data-zone]');
+  const pillNav = root.querySelector<HTMLElement>('.hs-pills');
+  const mockup = root.querySelector<HTMLAnchorElement>('[data-mockup]');
+
+  const canHover = window.matchMedia('(hover: hover) and (pointer: fine)');
+  const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+
+  // ── Render: one pass that syncs DOM to state ───────────────────
+  function setActive(next: Project | null) {
+    if (next?.id === activeProject?.id) return;
+    activeProject = next;
+
+    root.dataset.state = next ? 'active' : 'idle';
+    // keep the last accent + media while fading back to idle (no color flash)
+    if (next) {
+      root.style.setProperty('--accent', next.accent);
+      root.dataset.media = next.brand ? 'brand' : 'browser';
+      if (!next.brand && mockup) mockup.href = next.href;
+    }
+
+    targets.forEach((el) => el.toggleAttribute('data-on', el.dataset.project === next?.id));
+    pills.forEach((el) => el.setAttribute('aria-current', String(el.dataset.project === next?.id)));
+  }
+
+  const cancelReset = () => window.clearTimeout(resetTimer);
+  const scheduleReset = () => {
+    cancelReset();
+    resetTimer = window.setTimeout(() => setActive(null), RESET_DELAY);
+  };
+  const projectOf = (el: HTMLElement) => byId.get(el.dataset.project ?? '') ?? null;
+
+  // ── Pointer (desktop hover) ────────────────────────────────────
+  pills.forEach((pill) => {
+    pill.addEventListener('pointerenter', (e) => {
+      if (e.pointerType !== 'mouse') return;
+      cancelReset();
+      setActive(projectOf(pill));
+    });
+
+    // Touch / no-hover devices on wide screens: 1st tap previews, 2nd tap opens.
+    pill.addEventListener('click', (e) => {
+      if (canHover.matches) return;
+      const p = projectOf(pill);
+      if (p && activeProject?.id !== p.id) {
+        e.preventDefault();
+        setActive(p);
+      }
+    });
+
+    // Keyboard
+    pill.addEventListener('focus', () => {
+      cancelReset();
+      setActive(projectOf(pill));
+    });
+  });
+
+  // List + mockup act as one "hover zone": moving between them keeps the state.
+  zones.forEach((zone) => {
+    zone.addEventListener('pointerenter', (e) => { if (e.pointerType === 'mouse') cancelReset(); });
+    zone.addEventListener('pointerleave', (e) => { if (e.pointerType === 'mouse') scheduleReset(); });
+  });
+
+  pillNav?.addEventListener('focusout', (e) => {
+    if (!pillNav.contains(e.relatedTarget as Node | null)) scheduleReset();
+  });
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && activeProject) {
+      (document.activeElement as HTMLElement | null)?.blur();
+      setActive(null);
+    }
+  });
+
+  // Tap outside (touch, wide screens) returns to idle.
+  document.addEventListener('pointerdown', (e) => {
+    if (canHover.matches || !activeProject) return;
+    if (!(e.target as Element).closest('[data-zone]')) setActive(null);
+  });
+
+  // ── Subtle parallax (mockup tilt + background drift) ───────────
+  if (canHover.matches && !reducedMotion.matches) {
+    let raf = 0;
+    root.addEventListener('pointermove', (e) => {
+      if (raf) return;
+      raf = requestAnimationFrame(() => {
+        const r = root.getBoundingClientRect();
+        root.style.setProperty('--mx', (((e.clientX - r.left) / r.width) * 2 - 1).toFixed(3));
+        root.style.setProperty('--my', (((e.clientY - r.top) / r.height) * 2 - 1).toFixed(3));
+        raf = 0;
+      });
+    });
+    root.addEventListener('pointerleave', () => {
+      root.style.setProperty('--mx', '0');
+      root.style.setProperty('--my', '0');
+    });
+  }
+}
+</script>
