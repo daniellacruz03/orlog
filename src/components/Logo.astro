@@ -1,0 +1,78 @@
+---
+import { getNextLogoId } from './logo-id';
+
+export interface Props {
+  size?: number | string;
+  variant?: 'mark' | 'full';
+  label?: string;
+  class?: string;
+}
+
+const { size = 28, variant = 'mark', label, class: className = '', ...rest } = Astro.props;
+
+const maskId = getNextLogoId();
+const ariaAttrs = label
+  ? { 'aria-label': label, role: 'img' as const }
+  : { 'aria-hidden': 'true' as const };
+---
+
+{variant === 'full' ? (
+  <span class={`logo-full ${className}`} {...(label ? { 'aria-label': label, role: 'img' } : {})} {...rest}>
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 28 28"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      class="logo-mark"
+      aria-hidden="true"
+    >
+      <mask id={maskId} maskUnits="userSpaceOnUse" x="0" y="0" width="28" height="28">
+        <rect width="28" height="28" fill="white" />
+        <rect x="8.5" y="0" width="5" height="17" transform="rotate(45 11 17)" fill="black" />
+      </mask>
+      <circle class="logo-ring" cx="11" cy="17" r="7.5" stroke="currentColor" stroke-width="5" mask={`url(#${maskId})`} />
+      <rect class="logo-diamond" x="19.25" y="5.25" width="3.5" height="3.5" transform="rotate(45 21 7)" fill="currentColor" />
+    </svg>
+    <span class="logo-text">Orlog</span>
+  </span>
+) : (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 28 28"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+    class={`logo-mark ${className}`}
+    {...ariaAttrs}
+    {...rest}
+  >
+    <mask id={maskId} maskUnits="userSpaceOnUse" x="0" y="0" width="28" height="28">
+      <rect width="28" height="28" fill="white" />
+      <rect x="8.5" y="0" width="5" height="17" transform="rotate(45 11 17)" fill="black" />
+    </mask>
+    <circle class="logo-ring" cx="11" cy="17" r="7.5" stroke="currentColor" stroke-width="5" mask={`url(#${maskId})`} />
+    <rect class="logo-diamond" x="19.25" y="5.25" width="3.5" height="3.5" transform="rotate(45 21 7)" fill="currentColor" />
+  </svg>
+)}
+
+<style>
+  :where(.logo-mark) {
+    color: var(--c-gold);
+    display: inline-block;
+    vertical-align: middle;
+    flex-shrink: 0;
+  }
+  .logo-full {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.625rem;
+  }
+  .logo-text {
+    font-family: var(--font-head);
+    font-weight: 700;
+    font-size: 1.125rem;
+    letter-spacing: -0.02em;
+    color: var(--c-text);
+  }
+</style>

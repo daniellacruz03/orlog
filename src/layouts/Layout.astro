@@ -1,4 +1,4 @@
-﻿---
+---
 import '../styles/global.css';
 const { title = 'Orlog — Engineering & Software Solutions', description = 'Orlog builds high-performance web products, operational automations, and custom software architecture for ambitious businesses.' } = Astro.props;
 ---
@@ -13,6 +13,10 @@ const { title = 'Orlog — Engineering & Software Solutions', description = 'Orl
     <meta property="og:type" content="website" />
     <title>{title}</title>
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="icon" href="/favicon.ico" sizes="32x32" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <meta name="theme-color" content="#172536" />
+    <script is:inline>document.documentElement.classList.add('js');</script>
   </head>
   <body>
     <slot />

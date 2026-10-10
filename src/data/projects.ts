@@ -12,6 +12,8 @@ export interface Project {
   url: string;
   /** Mockup screenshot — also reused, blurred, as the reactive background */
   image: string;
+  /** Lightweight blur background version */
+  blurImage?: string;
   /** Tint used for glow, pill dot and background wash */
   accent: string;
   metric: { value: string; label: string };
@@ -51,7 +53,7 @@ export const projects: Project[] = [
       'Digital menu & ordering system: live search, category filters and a cart that checks out straight to WhatsApp. Plus a build-your-own-burger station, video stories and full Meta Pixel + GA4 tracking.',
     stack: ['Tailwind', 'JavaScript', 'WhatsApp', 'Meta Pixel', 'GA4'],
     brand: {
-      scene: { src: '/work/burger-house/scene-wide.jpg', width: 1024, height: 474 },
+      scene: { src: '/work/burger-house/scene-wide.jpg', width: 2400, height: 1112 },
       backdrop:
         'radial-gradient(ellipse 60% 55% at 52% 34%, #8A0A1F 0%, #6A0717 38%, #4A0511 66%, #22030A 100%)',
       logo: '/work/burger-house/logo.png',
@@ -74,7 +76,7 @@ export const projects: Project[] = [
       'Last-mile logistics SaaS: public shipment tracking, live KPI dashboard, GPS-powered route planner, mobile driver portal with photo proof-of-delivery and satellite client confirmation.',
     stack: ['Astro', 'PostgreSQL', 'Railway', 'Leaflet', 'WhatsApp API'],
     brand: {
-      scene: { src: '/work/envias/enviashero.jpg', width: 1456, height: 816 },
+      scene: { src: '/work/envias/enviashero.jpg', width: 2400, height: 1350 },
       backdrop:
         'radial-gradient(ellipse 65% 60% at 50% 38%, #0F2460 0%, #091A4A 35%, #060F2E 65%, #020810 100%)',
       logo: '/work/envias/logo.svg',
@@ -88,6 +90,7 @@ export const projects: Project[] = [
     href: '/work/onboardiq',
     url: 'app.onboardiq.io',
     image: '/mockup-onboarding.jpg',
+    blurImage: '/mockup-onboarding-blur.jpg',
     accent: '#818CF8',
     metric: { value: '48h', label: 'time-to-value' },
     summary: 'Enterprise onboarding cut from 14 days to 48 hours. Eleven manual handoffs replaced by automated provisioning.',
@@ -101,6 +104,7 @@ export const projects: Project[] = [
     href: '/work/complianceflow',
     url: 'reports.complianceflow.io',
     image: '/mockup-compliance.jpg',
+    blurImage: '/mockup-compliance-blur.jpg',
     accent: '#34D399',
     metric: { value: '−96%', label: 'reporting time' },
     summary: 'A 40-hour manual compliance cycle turned into a 90-minute pipeline. Zero manual errors in 8 months.',
@@ -114,6 +118,7 @@ export const projects: Project[] = [
     href: '/work/apex-storefront',
     url: 'apex-store.io',
     image: '/mockup-ecommerce.jpg',
+    blurImage: '/mockup-ecommerce-blur.jpg',
     accent: '#FB923C',
     metric: { value: '+34%', label: 'revenue in 60 days' },
     summary: 'Headless rebuild with real-time sync. 98/100 PageSpeed, cart abandonment down from 78% to 51%.',
